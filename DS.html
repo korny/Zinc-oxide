@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Divided Space — Demo</title>
+    <link rel="stylesheet" href="main.css">
+    <script src="lib/shapes.js"></script>
+    <script src="lib/draw_engine.js"></script>
+    <script src="log.js"></script>
+    <script src="app.js"></script>
+  </head>
+  <body>
+    <canvas id="background">Your browser doesn't support HTML 5 Canvas.</canvas>
+    <canvas id="fire"></canvas>
+    <canvas id="units"></canvas>
+    <canvas id="grid"></canvas>
+    <canvas id="selection"></canvas>
+    <canvas id="osd" style="display: block"></canvas>
+    
+    <div id="biginfo"></div>
+    <div id="coordinates"></div>
+    <div id="info"></div>
+    
+    <div id="controls">
+      <div class="button" id="play" style="display: none">Play</div>
+    </div>
+    
+    <img id="fighter-l-two" src="images/fighter_light_blue.png" style="display: none;" />
+    <img id="fighter-l-one" src="images/fighter_light_red.png" style="display: none;" />
+    
+    <script>
+    var waitForImages = window.setInterval(function() {
+      for (var i = document.images.length; i--;) {
+        if (!document.images[i].complete) return;
+      }
+      window.clearInterval(waitForImages);
+      var match = location.search.match(/log=([-\w]+)/);
+      DS.initialize('log');
+    }, 500);
+    </script>
+  </body>
+</html>

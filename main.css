@@ -1,8 +1,8 @@
 body {
-  font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Verdana, sans-serif;
   margin: 0;
   background: black;
-  overflow:hidden;
+  overflow: hidden;
 }
 canvas {
   position: absolute;
@@ -29,6 +29,7 @@ canvas {
 #controls .button {
   float: left;
   font-size: 3em;
+  font-weight: bold;
   padding: 1px 15px;
   cursor: pointer;
   color: silver;

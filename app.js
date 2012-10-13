@@ -10,12 +10,10 @@ Browser = {
 if (!window.console) console = { log: function () {} };
 
 var DS = {
-  WIDTH:  window.innerWidth,
-  HEIGHT: window.innerHeight,
-  
   offset: {
     x: 0, y: 0,
-    start: {}, old: {},
+    start: { x: 0, y: 0 },
+    old:   { x: 0, y: 0 },
     startAt: function(x, y) {
       this.start.x = x;
       this.start.y = y;
@@ -25,15 +23,15 @@ var DS = {
     moveTo: function(x, y) {
       this.x = this.old.x + (x - this.start.x);
       this.y = this.old.y + (y - this.start.y);
+      DS.needsDisplay();
     }
   },
+  
+  FPS: 30,
   
   ZOOM_MIN:       3,
   ZOOM_INITIAL:  30,
   ZOOM_MAX:     200,
-  
-  REDRAW_DELAY: 50,  // in milliseconds
-  FPS: 30,
   
   stopped: false,
   
@@ -43,18 +41,18 @@ var DS = {
     this.setupDisplay();
     this.setupMouseKeyboard();
     this.setupGUI();
-    this.setupMap();
     
     this.setZoom(this.ZOOM_INITIAL);
-    this.offset.x = Math.round(this.WIDTH  / 2) - this.hexagon.side / 2;
-    this.offset.y = Math.round(this.HEIGHT / 2) - this.hexagon.row  / 2;
-    this.redrawDisplay();
+    this.offset.moveTo(
+      Math.round(window.innerWidth  / 2) - this.hexagon.side / 2,
+      Math.round(window.innerHeight / 2) - this.hexagon.row  / 2);
+    this.resizeDisplay();
   },
   
   setZoom: function (zoom) {
     this.zoom = zoom;
-    this.setupHexagon(zoom);
-    this.redrawDisplay();
+    this.updateHexagonForZoom(zoom);
+    this.needsDisplay();
   },
   
   setupMouseKeyboard: function () {
@@ -64,7 +62,6 @@ var DS = {
     document.body.addEventListener('mousemove', function (event) {
       if (mouseDown) {
         gui.offset.moveTo(event.clientX, event.clientY);
-        gui.redrawDisplay();
       }
       else {
         gui.selectionMouseMove(event);
@@ -133,34 +130,7 @@ var DS = {
     }
   },
   
-  setupMap: function () {
-    var selection = this.selection;
-    
-    this.map = {
-      map: {},
-      coords: [],
-      animate: false,
-      epic2evil: function(epicX, epicY) {
-        var evilX = epicX - epicY;
-        var evilY = Math.floor(-(epicX + epicY) / 2);
-        return { x: evilX, y: evilY };
-      },
-      evil2epic: function(evilX, evilY) {
-        var epicX = -evilY + Math.floor( evilX / 2);
-        var epicY = -evilY + Math.floor(-evilX / 2);
-        return { x: epicX, y: epicY };
-      },
-      coord: function(x, y) {
-        var row = this.coords[x];
-        if (!row) row = this.coords[x] = [];
-        var coord = row[y];
-        if (!coord) coord = row[y] = x + '/' + y;
-        return coord;
-      }
-    };
-  },
-  
-  setupHexagon: function (size) {
+  updateHexagonForZoom: function (size) {
     // If we assume size == 1 then:
     //            _    A_________B    _
     //           |     /(0,0)    \     |
@@ -191,17 +161,22 @@ var DS = {
   setupDisplay: function () {
     var gui = this;
     
-    this.grid      = Shapes.initCanvas('grid',      this.WIDTH, this.HEIGHT, 'transparent');
-    this.selection = Shapes.initCanvas('selection', this.WIDTH, this.HEIGHT);
-    this.target    = Shapes.initCanvas('target',    this.WIDTH, this.HEIGHT);
+    this.grid      = Shapes.initCanvas('grid');
+    this.selection = Shapes.initCanvas('selection');
+    this.targets   = Shapes.initCanvas('targets');
     
-    this.selectionLoop = DrawEngine.addLoop('selection', function (loop) {
-      gui.drawSelection(loop);
+    this.displayLoop = DrawEngine.addLoop('selection', function (loop) {
+      if (gui.selection.needsUpdate) gui.drawSelection(loop);
+      if (gui.grid.needsUpdate) gui.drawHexagonPattern(loop);
+    }, this.FPS).start();
+    
+    this.selectionPulseLoop = DrawEngine.addLoop('selection', function (loop) {
+      gui.drawSelection(loop, true);
     }, this.FPS).start();
   },
   
   mousewheel: function (event) {
-    var scroll = event.wheelDelta || -event.detail;
+    var scroll = event.wheelDelta || -event.detail * 2;
     var cursor = this.eventCoordinates(event);
     
     var zoomFactor = (1 + scroll / 2000);
@@ -270,29 +245,28 @@ var DS = {
     }
   },
   
+  needsDisplay: function () {
+    this.selection.needsUpdate = true;
+    this.grid.needsUpdate      = true;
+  },
+  
   redrawDisplay: function() {
     this.drawHexagonPattern();
-    this.selection.clear();
-    this.selection.needsUpdate = true;
     this.selectionLoop.draw();
-    // this.drawTargets();
   },
   
   resizeDisplay: function() {
-    this.WIDTH  = window.innerWidth;
-    this.HEIGHT = window.innerHeight;
-    
     var canvases = document.body.getElementsByTagName('canvas');
     for (var i = canvases.length; i--;) {
       var canvas = canvases.item(i);
-      canvas.width  = this.WIDTH;
-      canvas.height = this.HEIGHT;
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
     
-    this.redrawDisplay();
+    this.needsDisplay();
   },
   
-  getHexagonCoordinates: function(col, row) {
+  getHexagonCoordinatesOld: function(col, row) {
     var hex_col = Math.floor(col / this.hexagon.col);  // column size factor
     if (hex_col & 1) row -= Math.floor(this.hexagon.row / 2);  // odd row offset
     var hex_row = Math.floor(row / this.hexagon.row);  // row size factor
@@ -319,7 +293,7 @@ var DS = {
     return { col: hex_col, row: hex_row };
   },
   
-  // by Sam Hocevar, see http://gamedev.stackexchange.com/a/20753
+  // Algorithm by Sam Hocevar, see http://gamedev.stackexchange.com/a/20753.
   // 
   // Here are the parameters of one hexagon. Its centre is in O, the largest width is 2a,
   // the height is 2b, and the length of the top edge is 2c.
@@ -401,6 +375,8 @@ var DS = {
     
   drawHexagonPattern: function() {
     var context = this.grid;
+    if (!context.needsUpdate) return 'skipped';
+    // console.log('drawHexagonPattern');
     context.clear();
     
     if (this.hexagon.side < 10) return;
@@ -412,7 +388,6 @@ var DS = {
     var offsetX = Math.floor(this.offset.x        / this.hexagon.col);
     var offsetY = Math.floor(this.offset.y        / this.hexagon.row);
     
-    context.save();
     context.strokeStyle = 'hsla(120,100%,50%,0.3)';
     context.lineCap     = this.hexagon.side > 70 ? 'round' : 'butt';
     context.lineWidth   = this.hexagon.side / 42;
@@ -422,67 +397,81 @@ var DS = {
       context.strokeStyle = 'hsla(' + (240 - x * (120 / sizeX)) + ',100%,' + (70 - x * (30 / sizeX)) + '%,0.3)';
       // context.strokeStyle = 'hsla(120,100%,50%,0.3)';
       for (var y = -2; y < sizeY; y++) {
-        context.save();
         var drawOffset = this.translateHexagonCoordinates(x - offsetX, y - offsetY);
+        if (this.hexagon.side > 25) {
+          context.save();
+          context.globalAlpha = 0.3;
+          if (this.hexagon.side < 35) context.globalAlpha *= (this.hexagon.side - 25) / 10;
+          context.fillStyle = '#' + ((x - offsetX) & 1 ? 'ff' : '00') + ((y - offsetY) & 1 ? 'ff' : '00') + 'ff';
+          context.drawHexagon(drawOffset.x, drawOffset.y, this.hexagon.side);
+          context.strokeStyle = 'transparent';
+          context.fill();
+          context.restore();
+        }
+        context.save();
         context.drawHexagon(drawOffset.x, drawOffset.y, this.hexagon.side, 'half');
         context.restore();
       }
     }
-    context.restore();
+    
+    context.needsUpdate = false;
   },
   
-  drawSelection: function(loop) {
-    if (!this.selection) return null;
+  drawSelection: function(loop, pulse) {
     var context = this.selection;
-    if (!context.needsUpdate) return 'skipped';
-    if (!context.oldSelectedHexagon && !context.selectedHexagon) return 'skipped';
+    if (!context.needsUpdate && !(pulse && context.pulse != 1.5)) return 'skipped';  // no need to draw
+    if (!context.oldSelectedHexagon && !context.selectedHexagon) return 'skipped';  // nothing to draw
+    // console.log('drawSelection ' + (context.needsUpdate ? 'needsUpdate' : 'pulse'));
     
-    // remove old hexagon
-    var oldSelectedHexagon = context.oldSelectedHexagon;
-    if (oldSelectedHexagon) {
-      context.save();
-      var drawOffset = this.translateHexagonCoordinates(oldSelectedHexagon.col, oldSelectedHexagon.row);
-      context.clearHexagon(drawOffset.x, drawOffset.y, this.hexagon.side);
-      context.restore();
-      context.oldSelectedHexagon = null;
-    }
-    
-    // draw selected hexagon
-    var selectedHexagon = context.selectedHexagon;
-    if (selectedHexagon) {
-      var pulse = 1 + Math.sin(10 * loop.timepoint()) / 2;
-      if (context.selectionFixed) pulse = 1.5;
-      context.lineWidth = this.hexagon.side / 23;
-      if (context.lineWidth < 0.7) context.lineWidth = 0.7;
-      context.lineWidth *= pulse;
-      context.fillStyle = 'hsla(240,100%,50%,0.1)';
-      context.strokeStyle = 'hsl(240,100%,' + (30 + 20 * pulse) + '%)';
-      context.lineCap = 'round';
-      context.save();
-      var drawOffset = this.translateHexagonCoordinates(selectedHexagon.col, selectedHexagon.row);
-      context.drawHexagon(drawOffset.x, drawOffset.y, this.hexagon.side);
-      context.restore();
-      context.oldSelectedHexagon = selectedHexagon;
-      var epicPos = this.map.evil2epic(selectedHexagon.col, selectedHexagon.row);
-      if (context.needsUpdate) {
-        document.getElementById('coordinates').innerHTML =
-          'EVIL ' + selectedHexagon.col + '/' + selectedHexagon.row + ' = ' +
-          'EPIC ' + epicPos.x + '/' + epicPos.y;
-        // context.selectionFixed = false;
+    if (context.needsUpdate) {
+      if (context.selectedHexagon) {
+        document.getElementById('coordinates').innerHTML = context.selectedHexagon.col + '/' + context.selectedHexagon.row;
         document.getElementById('info').innerHTML = 'empty space';
         document.getElementById('biginfo').innerHTML = '';
       }
+      else {
+        document.getElementById('info').innerHTML = '';
+        document.getElementById('coordinates').innerHTML = '';
+      }
+      
+      context.clear();
     }
-    else {
-      document.getElementById('info').innerHTML = '';
-      document.getElementById('coordinates').innerHTML = '';
+    else if (context.oldSelectedHexagon) {
+      // remove old hexagon
+      context.save();
+      var drawOffset = this.translateHexagonCoordinates(context.oldSelectedHexagon.col, context.oldSelectedHexagon.row);
+      context.clearHexagon(drawOffset.x, drawOffset.y, this.hexagon.side);
+      context.restore();
+    }
+    context.oldSelectedHexagon = null;
+    
+    if (context.selectedHexagon) {
+      // draw selected hexagon
+      if (context.selectionFixed) context.pulse = 1.5;
+      else context.pulse = 1 + Math.sin(10 * loop.timepoint()) / 2;
+      
+      context.lineWidth = this.hexagon.side / 23;
+      if (context.lineWidth < 0.7) context.lineWidth = 0.7;
+      context.lineWidth *= context.pulse;
+      
+      context.fillStyle = 'hsla(240,100%,50%,0.1)';
+      context.strokeStyle = 'hsl(240,100%,' + (30 + 20 * context.pulse) + '%)';
+      context.lineCap = 'round';
+      
+      context.save();
+      var drawOffset = this.translateHexagonCoordinates(context.selectedHexagon.col, context.selectedHexagon.row);
+      context.drawHexagon(drawOffset.x, drawOffset.y, this.hexagon.side);
+      context.restore();
+      
+      context.oldSelectedHexagon = context.selectedHexagon;
     }
     
+    context.needsUpdate = false;
     return true;
   },
   
   drawTargets: function() {
-    var context = this.target;
+    var context = this.targets;
     context.clear();
     
     context.globalAlpha = 0.3;

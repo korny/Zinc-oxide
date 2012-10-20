@@ -87,8 +87,10 @@ var DS = {
     }, false);
     
     document.body.addEventListener('dblclick', function (event) {
-      gui.offset.x = gui.offset.y = 0;
-      gui.setZoom();
+      gui.setZoom(gui.ZOOM_INITIAL);
+      gui.offset.x = Math.round(window.innerWidth  / 2) - gui.hexagon.side / 2;
+      gui.offset.y = Math.round(window.innerHeight / 2) - gui.hexagon.row  / 2;
+      gui.resizeDisplay();
     }, false);
     
     document.body.addEventListener(Browser.Gecko ? 'MozMousePixelScroll' : 'mousewheel', function (event) {
@@ -232,12 +234,14 @@ var DS = {
       if (selectedHexagon &&
           clickedHexagon.col === selectedHexagon.col &&
           clickedHexagon.row === selectedHexagon.row) {
+        console.log('selectionClick off');
         this.selection.selectionFixed = false;
-        return;
       }
-      this.selection.selectionFixed = false;
-      this.selectionMouseMove(event);
-      this.selection.selectionFixed = true;
+      else {
+        this.selection.selectionFixed = false;
+        this.selectionMouseMove(event);
+        this.selection.selectionFixed = true;
+      }
     }
     else {
       this.selectionMouseMove(event);
@@ -419,10 +423,9 @@ var DS = {
   
   drawSelection: function(loop, pulse) {
     var context = this.selection;
-    if (!context.needsUpdate && !(pulse && context.pulse != 1.5)) return 'skipped';  // no need to draw
+    if (!context.needsUpdate && !(pulse && !(this.selection.selectionFixed && context.pulse === 1.5))) return 'skipped';  // no need to draw
     if (!context.oldSelectedHexagon && !context.selectedHexagon) return 'skipped';  // nothing to draw
     // console.log('drawSelection ' + (context.needsUpdate ? 'needsUpdate' : 'pulse'));
-    
     if (context.needsUpdate) {
       if (context.selectedHexagon) {
         document.getElementById('coordinates').innerHTML = context.selectedHexagon.col + '/' + context.selectedHexagon.row;

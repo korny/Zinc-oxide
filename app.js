@@ -35,7 +35,7 @@ var DS = {
   
   stopped: false,
   
-  initialize: function (name) {
+  initialize: function () {
     DrawEngine.initialize();
     
     this.setupDisplay();
@@ -485,3 +485,7 @@ var DS = {
     }
   }
 };
+
+jQuery(function ($) {
+  DS.initialize();
+});

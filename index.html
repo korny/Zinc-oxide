@@ -31,11 +31,10 @@
     
     <script>
     var waitForImages = window.setInterval(function() {
-      for (var i = document.images.length; i--;) {
-        if (!document.images[i].complete) return;
+      for (var image in document.images) {
+        if (!image.complete) return;
       }
       window.clearInterval(waitForImages);
-      DS.initialize('log');
     }, 50);
     </script>
   </body>

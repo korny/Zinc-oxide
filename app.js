@@ -29,7 +29,7 @@ var DS = {
   
   FPS: 30,
   
-  ZOOM_MIN:       3,
+  ZOOM_MIN:      15,
   ZOOM_INITIAL:  30,
   ZOOM_MAX:     200,
   
@@ -128,7 +128,8 @@ var DS = {
       this.playPause();
     }
     else if (event.keyCode == 13) {
-      this.drawTargets();
+      this.benchmarkGrid();
+      // this.drawTargets();
     }
   },
   
@@ -234,7 +235,6 @@ var DS = {
       if (selectedHexagon &&
           clickedHexagon.col === selectedHexagon.col &&
           clickedHexagon.row === selectedHexagon.row) {
-        console.log('selectionClick off');
         this.selection.selectionFixed = false;
       }
       else {
@@ -383,10 +383,6 @@ var DS = {
     // console.log('drawHexagonPattern');
     context.clear();
     
-    if (this.hexagon.side < 10) return;
-    context.globalAlpha = 1;
-    if (this.hexagon.side < 15) context.globalAlpha = 1 - (15 - this.hexagon.side) / (15 - 10);
-    
     var sizeX   = Math.ceil(context.canvas.width  / this.hexagon.col);
     var sizeY   = Math.ceil(context.canvas.height / this.hexagon.row);
     var offsetX = Math.floor(this.offset.x        / this.hexagon.col);
@@ -395,27 +391,40 @@ var DS = {
     context.strokeStyle = 'hsla(120,100%,50%,0.3)';
     context.lineCap     = this.hexagon.side > 70 ? 'round' : 'butt';
     context.lineWidth   = this.hexagon.side / 42;
-    if (context.lineWidth < 0.7) context.lineWidth = 0.7;
     
-    for (var x = -2; x < sizeX; x++) {
-      context.strokeStyle = 'hsla(' + (240 - x * (120 / sizeX)) + ',100%,' + (70 - x * (30 / sizeX)) + '%,0.3)';
-      // context.strokeStyle = 'hsla(120,100%,50%,0.3)';
-      for (var y = -2; y < sizeY; y++) {
-        var drawOffset = this.translateHexagonCoordinates(x - offsetX, y - offsetY);
-        if (this.hexagon.side > 25) {
-          context.save();
-          context.globalAlpha = 0.3;
-          if (this.hexagon.side < 35) context.globalAlpha *= (this.hexagon.side - 25) / 10;
-          context.fillStyle = '#' + ((x - offsetX) & 1 ? 'ff' : '00') + ((y - offsetY) & 1 ? 'ff' : '00') + 'ff';
-          context.drawHexagon(drawOffset.x, drawOffset.y, this.hexagon.side);
-          context.strokeStyle = 'transparent';
+    if (this.hexagon.side > 10) {
+      context.save();
+      context.globalAlpha = 0.3;
+      if (this.hexagon.side < 15) context.globalAlpha *= (this.hexagon.side - 10) / (15 - 10);
+      
+      for (var x = -2; x < sizeX + 1; x++) {
+        for (var y = -2; y < sizeY; y++) {
+          context.beginPath();
+          var drawOffset = this.translateHexagonCoordinates(x - offsetX, y - offsetY);
+          context.hex(drawOffset.x, drawOffset.y, this.hexagon.side);
+          context.fillStyle = 'hsla(' + Math.abs(((x - offsetX) * 7319 + (y - offsetY) * 1641) % 360) + ',100%,50%,1)';
           context.fill();
-          context.restore();
         }
-        context.save();
-        context.drawHexagon(drawOffset.x, drawOffset.y, this.hexagon.side, 'half');
-        context.restore();
       }
+      context.restore();
+    }
+    
+    if (this.hexagon.side > 10) {
+      context.save();
+      context.globalAlpha = 1;
+      if (this.hexagon.side < 15) context.globalAlpha *= (this.hexagon.side - 10) / (15 - 10);
+      
+      for (var x = -1; x < sizeX + 1; x++) {
+        for (var y = -2; y < sizeY; y++) {
+          context.beginPath();
+          var drawOffset = this.translateHexagonCoordinates(x - offsetX, y - offsetY);
+          context.hex(drawOffset.x, drawOffset.y, this.hexagon.side, 'half');
+          context.strokeStyle = 'gray';
+          // context.strokeStyle = 'hsla(' + (240 - x * (120 / sizeX)) + ',100%,' + (70 - x * (30 / sizeX)) + '%,0.3)';
+          context.stroke();
+        }
+      }
+      context.restore();
     }
     
     context.needsUpdate = false;
@@ -425,7 +434,6 @@ var DS = {
     var context = this.selection;
     if (!context.needsUpdate && !(pulse && !(this.selection.selectionFixed && context.pulse === 1.5))) return 'skipped';  // no need to draw
     if (!context.oldSelectedHexagon && !context.selectedHexagon) return 'skipped';  // nothing to draw
-    // console.log('drawSelection ' + (context.needsUpdate ? 'needsUpdate' : 'pulse'));
     if (context.needsUpdate) {
       if (context.selectedHexagon) {
         document.getElementById('coordinates').innerHTML = context.selectedHexagon.col + '/' + context.selectedHexagon.row;
@@ -457,7 +465,7 @@ var DS = {
       if (context.lineWidth < 0.7) context.lineWidth = 0.7;
       context.lineWidth *= context.pulse;
       
-      context.fillStyle = 'hsla(240,100%,50%,0.1)';
+      context.fillStyle = 'hsla(240,100%,50%,0.2)';
       context.strokeStyle = 'hsl(240,100%,' + (30 + 20 * context.pulse) + '%)';
       context.lineCap = 'round';
       
@@ -473,7 +481,16 @@ var DS = {
     return true;
   },
   
-  drawTargets: function() {
+  benchmarkGrid: function () {
+    var start = new Date();
+    for (var fps = 0; new Date() - start < 1000 && fps < 300; fps++) {
+      this.grid.needsUpdate = true;
+      this.drawHexagonPattern();
+    }
+    this.playButton.innerHTML = fps;
+  },
+  
+  drawTargets: function () {
     var context = this.targets;
     context.clear();
     

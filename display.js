@@ -28,11 +28,6 @@ DS.display = {
     }, this.FPS).start();
   },
   
-  redraw: function() {
-    this.drawHexagonPattern();
-    this.selectionLoop.draw();
-  },
-  
   resize: function (width, height) {
     var canvases = document.body.getElementsByTagName('canvas');
     for (var i = canvases.length; i--;) {

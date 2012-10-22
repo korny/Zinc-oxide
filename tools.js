@@ -11,7 +11,7 @@ if (!window.console) console = { log: function () {} };
 
 Event.prototype.xyCoordinates = function () {
   return {
-    x: event.pageX,
-    y: event.pageY
+    x: this.pageX,
+    y: this.pageY
   };
 };

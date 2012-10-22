@@ -1,4 +1,12 @@
-Zinc-oxide
+Zinc oxide
 ==========
 
-An interactive hexagonal grid with JavaScript and Canvas
+A work in progress.
+
+App:
+
+- Tools
+- Grid
+- GUI
+- Camera
+- Display

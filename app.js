@@ -1,22 +1,39 @@
-DS.app = {
+App = {
   initialize: function () {
-    this.grid    = DS.grid;
-    this.gui     = DS.gui;
-    this.camera  = DS.camera;
-    this.display = DS.display;
+    this.grid    = ZnO.hexGrid;
+    this.gui     = ZnO.gui;
+    this.camera  = ZnO.camera;
+    this.display = ZnO.display;
     
-    this.gui.initialize();
-    this.camera.initialize();
-    this.display.initialize();
+    this.gui.initialize(this);
+    this.camera.initialize(this);
+    this.display.initialize(this);
+    
+    $('#play').show();
   },
   
   benchmarkGrid: function () {
+    var milliseconds = 3000;
+    var pixels       = window.innerWidth * window.innerHeight;
+    
     var start = new Date();
-    for (var fps = 0; new Date() - start < 1000 && fps < 300; fps++) {
-      this.grid.needsUpdate = true;
-      this.display.drawHexagonPattern();
+    for (var frames = 0; new Date() - start < milliseconds && frames < milliseconds; frames++) {
+      this.display.grid.needsUpdate = true;
+      this.display.drawGrid();
     }
-    this.gui.playButton.innerHTML = fps;
+    milliseconds = new Date() - start;
+    
+    var fps   = frames / (milliseconds / 1000);
+    var ms    = milliseconds / frames;
+    var score = Math.round(fps * pixels / 100000) / 10;
+    
+    alert(
+      pixels + ' pixels\n' +
+      fps.toPrecision(3) + ' fps\n' +
+      ms.toPrecision(3) + 'ms/frame\n' +
+      '\n' +
+      'score: ' + score
+    );
   },
   
   drawTargets: function () {
@@ -27,10 +44,22 @@ DS.app = {
     
     for (var x = context.canvas.width; x >= 0; x--) {
       for (var y = context.canvas.height; y >= 0; y--) {
-        var coordinates = DS.grid.getHexagonCoordinatesHocevar(this.camera.hexagon.side, x - this.camera.offset.x, y - this.camera.offset.y);
+        var coordinates = this.camera.tileAtCoordinates(x, y);
         context.fillStyle = '#' + (coordinates.col & 1 ? 'ff' : '00') + (coordinates.row & 1 ? 'ff' : '00') + '00';
         context.fillRect(x, y, 1, 1);
       }
+    }
+  },
+  
+  handleKeyPress: function (event) {
+    switch (event.which) {
+      case 13:
+        this.benchmarkGrid();
+        // this.drawTargets();
+        break;
+      
+      default:
+        // console.log('key: ', event.which);
     }
   }
 };

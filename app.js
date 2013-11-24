@@ -19,7 +19,7 @@ App = {
     var start = new Date();
     for (var frames = 0; new Date() - start < milliseconds && frames < milliseconds; frames++) {
       this.display.grid.needsUpdate = true;
-      this.display.drawGrid();
+      this.display.drawGrid(this.display.grid, this.camera.zoom, this.camera.offset);
     }
     milliseconds = new Date() - start;
     
@@ -37,7 +37,7 @@ App = {
   },
   
   drawTargets: function () {
-    var context = this.display.targets;
+    var context = $('#targets')[0].getContext('2d');
     context.clear();
     
     context.globalAlpha = 0.3;

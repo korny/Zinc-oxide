@@ -4,7 +4,7 @@ DrawEngine = {};
   var originalTitle = document.title;
   function setDocumentTitle(text) {
     document.title = originalTitle + (text ? ' — ' + text : '');
-  };
+  }
   
   var loops = [];
   function updateTitle() {
@@ -16,7 +16,7 @@ DrawEngine = {};
       loop.skipped = 0;
     }
     setDocumentTitle(text);
-  };
+  }
   window.setInterval(updateTitle, 1000);
   
   self.addLoop = function (name, drawFrame, maxFPS) {

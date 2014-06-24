@@ -4,3 +4,7 @@ function remember(key, value) {
   
   return value;
 }
+
+function forget(key) {
+  localStorage.removeItem(key);
+}

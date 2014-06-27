@@ -25,12 +25,15 @@ App = {
     
     var fps   = frames / (milliseconds / 1000);
     var ms    = milliseconds / frames;
+    var tiles = Math.ceil(this.display.grid.canvas.width  / this.display.tile.col * this.display.grid.canvas.height  / this.display.tile.row);
     var score = Math.round(fps * pixels / 100000) / 10;
     
     alert(
       pixels + ' pixels\n' +
       fps.toPrecision(4) + ' fps\n' +
       ms.toPrecision(3) + 'ms/frame\n' +
+      tiles + ' tiles\n' +
+      'Zoom: ' + this.camera.zoom + '\n' +
       '\n' +
       'score: ' + score
     );

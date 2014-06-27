@@ -29,7 +29,7 @@ App = {
     
     alert(
       pixels + ' pixels\n' +
-      fps.toPrecision(3) + ' fps\n' +
+      fps.toPrecision(4) + ' fps\n' +
       ms.toPrecision(3) + 'ms/frame\n' +
       '\n' +
       'score: ' + score

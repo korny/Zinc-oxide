@@ -1,12 +1,12 @@
 var Random = (function() {
   // initialization is slow, cache this!
-  var generator = new MersenneTwister(0);
+  var generator = new Alea(0);
   var random = {
     init: function(seed) {
-      generator.setSeed(seed);
+      generator = new Alea(seed); // generator.setSeed(seed);
     },
     nextFraction: function() {
-      return generator.nextFloat();
+      return generator();
     },
     next: function(n) {
       if (n === undefined) n = 2;

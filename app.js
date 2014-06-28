@@ -23,19 +23,21 @@ App = {
     }
     milliseconds = new Date() - start;
     
-    var fps   = frames / (milliseconds / 1000);
-    var ms    = milliseconds / frames;
-    var tiles = Math.ceil(this.display.grid.canvas.width  / this.display.tile.col * this.display.grid.canvas.height  / this.display.tile.row);
-    var score = Math.round(fps * pixels / 100000) / 10;
+    var fps    = frames / (milliseconds / 1000);
+    var ms     = milliseconds / frames;
+    var tiles  = Math.ceil(this.display.grid.canvas.width  / this.display.tile.col * this.display.grid.canvas.height  / this.display.tile.row);
+    var mpix   = Math.round(fps * pixels / 100000) / 10;
+    var ktiles = Math.round(fps * tiles / 100) / 10;
     
     alert(
       pixels + ' pixels\n' +
-      fps.toPrecision(4) + ' fps\n' +
-      ms.toPrecision(3) + 'ms/frame\n' +
       tiles + ' tiles\n' +
-      'Zoom: ' + this.camera.zoom + '\n' +
       '\n' +
-      'score: ' + score
+      fps.toPrecision(4) + ' FPS\n' +
+      ms.toPrecision(3) + ' ms/frame\n' +
+      '\n' +
+      mpix + ' Mpixels per second\n' +
+      ktiles + ' ktiles per second'
     );
   },
   

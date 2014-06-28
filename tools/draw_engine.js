@@ -11,10 +11,11 @@ DrawEngine = {};
     var text = '';
     for (var name in loops) {
       var loop = loops[name];
-      text += name + ': ' + (loop.count - loop.skipped) + '/' + loop.count + ' fps ';
+      text += name + ': ' + (loop.count - loop.skipped) + '/' + loop.count + ' fps, ';
       loop.count = 0;
       loop.skipped = 0;
     }
+    text += 'Zoom: ' + Math.round(App.camera.zoom * 10) / 10;
     setDocumentTitle(text);
   }
   window.setInterval(updateTitle, 1000);

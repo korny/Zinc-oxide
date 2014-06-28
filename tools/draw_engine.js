@@ -20,30 +20,30 @@ DrawEngine = {};
   }
   window.setInterval(updateTitle, 1000);
   
-  self.addLoop = function (name, drawFrame, maxFPS) {
+  self.addLoop = function (name, drawFrame) {
     var loop = {
       name:      name,
       drawFrame: drawFrame,
-      maxFPS:    maxFPS || 30,
+      maxFPS:    60,
       frame:     0,
       skipped:   0,
       count:     0,
       
-      draw: function () {
-        return loop.drawFrame(loop);
+      draw: function (time) {
+        return loop.drawFrame(loop, time);
       },
       
       start: function () {
         var loop = this;
         
-        function frame() {
+        function frame(time) {
           requestAnimationFrame(frame);
           loop.frame++;
-          if (loop.draw() === 'skipped') loop.skipped++;
+          if (loop.draw(time) === 'skipped') loop.skipped++;
           loop.count++;
         }
         
-        frame();
+        frame(+new Date());
         
         return this;
       },

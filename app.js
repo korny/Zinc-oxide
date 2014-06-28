@@ -19,7 +19,7 @@ App = {
     var start = new Date();
     for (var frames = 0; new Date() - start < milliseconds && frames < milliseconds; frames++) {
       this.display.grid.needsUpdate = true;
-      this.display.drawGrid(this.display.grid, this.camera.zoom, this.camera.offset);
+      this.display.redrawGrid(this.display.displayLoop, +new Date());
     }
     milliseconds = new Date() - start;
     

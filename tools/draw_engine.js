@@ -34,11 +34,15 @@ DrawEngine = {};
       
       start: function () {
         var loop = this;
-        setInterval(function () {
+        
+        function frame() {
+          requestAnimationFrame(frame);
           loop.frame++;
           if (loop.draw() === 'skipped') loop.skipped++;
           loop.count++;
-        }, 1000 / maxFPS);
+        }
+        
+        frame();
         
         return this;
       },

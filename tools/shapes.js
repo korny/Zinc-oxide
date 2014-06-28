@@ -89,7 +89,8 @@
       if (!half) {
         this.lineTo(x,              y + h);      // -> E
         this.lineTo(x - size * 0.5, y + h / 2);  // -> F
-        this.lineTo(x,              y);          // -> A
+        // this.lineTo(x,              y);          // -> A
+        this.closePath();                        // -> A
       }
     },
     

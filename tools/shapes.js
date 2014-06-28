@@ -48,8 +48,8 @@
       if (lineWidth)   this.lineWidth = lineWidth;
       this.beginPath();
       this.arc(x, y, radius, startAngle, endAngle, anticlockwise);
-      if (this.fillStyle   != 'transparent') this.fill();
-      if (this.strokeStyle != 'transparent') this.stroke();
+      if (fillStyle   != 'transparent') this.fill();
+      if (strokeStyle != 'transparent') this.stroke();
     },
     
     // Draw a perfect hexagon where the inner angles are 120°.

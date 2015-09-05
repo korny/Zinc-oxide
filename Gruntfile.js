@@ -7,12 +7,13 @@ module.exports = function(grunt) {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
       build: {
-        src: ['vendor/*.js', 'lib/*.js', 'tools/*.js', 'app.js'],
+        src: ['vendor/*.js', 'node_modules/alea/alea.js', 'node_modules/simplex-noise/simplex-noise.js',
+              'tools/*.js', 'lib/*.js', 'app.js'],
         dest: 'build/<%= pkg.name %>.min.js'
       }
     },
     jshint: {
-      files: ['Gruntfile.js', 'lib/*.js', 'tools/*.js', 'app.js'],
+      files: ['Gruntfile.js', 'tools/*.js', 'lib/*.js', 'app.js'],
       options: {
         loopfunc: true,
         globals: {

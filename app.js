@@ -30,6 +30,8 @@ App = {
     var ktiles = Math.round(fps * tiles / 100) / 10;
     
     alert(
+      'Zoom: ' + this.camera.zoom +
+      '\n' +
       pixels + ' pixels\n' +
       tiles + ' tiles\n' +
       '\n' +

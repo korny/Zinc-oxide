@@ -19,20 +19,27 @@ App = {
     var start = new Date();
     for (var frames = 0; new Date() - start < milliseconds && frames < milliseconds; frames++) {
       this.display.grid.needsUpdate = true;
-      this.display.drawGrid(this.display.grid, this.camera.zoom, this.camera.offset);
+      this.display.redrawGrid(this.display.displayLoop, +new Date());
     }
     milliseconds = new Date() - start;
     
-    var fps   = frames / (milliseconds / 1000);
-    var ms    = milliseconds / frames;
-    var score = Math.round(fps * pixels / 100000) / 10;
+    var fps    = frames / (milliseconds / 1000);
+    var ms     = milliseconds / frames;
+    var tiles  = Math.ceil(this.display.grid.canvas.width  / this.display.tile.col * this.display.grid.canvas.height  / this.display.tile.row);
+    var mpix   = Math.round(fps * pixels / 100000) / 10;
+    var ktiles = Math.round(fps * tiles / 100) / 10;
     
     alert(
-      pixels + ' pixels\n' +
-      fps.toPrecision(3) + ' fps\n' +
-      ms.toPrecision(3) + 'ms/frame\n' +
+      'Zoom: ' + this.camera.zoom +
       '\n' +
-      'score: ' + score
+      pixels + ' pixels\n' +
+      tiles + ' tiles\n' +
+      '\n' +
+      fps.toPrecision(4) + ' FPS\n' +
+      ms.toPrecision(3) + ' ms/frame\n' +
+      '\n' +
+      mpix + ' Mpixels per second\n' +
+      ktiles + ' ktiles per second'
     );
   },
   
